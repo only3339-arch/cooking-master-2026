@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>廚神特攻隊 - 特級廚師版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入書法風格字體 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'fire-red': '#D32F2F',      // 熱血紅
+                        'legendary-gold': '#FFD700', // 傳說金
+                        'jade-green': '#2E7D32',    // 翡翠綠
+                        'deep-navy': '#1A237E',     // 深海藍
+                        'parchment': '#FFF8E1',     // 卷軸羊皮紙
+                        'seal-red': '#B71C1C',      // 印章深紅
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Serif TC"', 'serif'], // 改用襯線體
+                        serif: ['"Noto Serif TC"', 'serif'],
+                    },
+                    boxShadow: {
+                        'glow': '0 0 10px rgba(255, 215, 0, 0.6)',
+                        'glow-white': '0 0 15px rgba(255, 255, 255, 0.8)',
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 3s linear infinite',
+                        'reveal': 'reveal 1.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        reveal: {
+                            '0%': { transform: 'scale(0)', opacity: '0' },
+                            '50%': { transform: 'scale(1.2)', opacity: '1' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            -webkit-tap-highlight-color: transparent; 
+            background-color: #1A237E;
+            background-image: radial-gradient(circle at 50% 50%, #283593 0%, #1A237E 100%);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        
+        /* 卷軸樣式 */
+        .scroll-card {
+            background-color: #FFF8E1;
+            border: 2px solid #FFD700;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3), 0 0 0 2px #B71C1C inset; /* 雙層邊框 */
+            position: relative;
+        }
+        /* 卷軸裝飾角 */
+        .scroll-card::after {
+            content: '';
+            position: absolute;
+            top: 2px; left: 2px; right: 2px; bottom: 2px;
+            border: 1px solid #FFD700;
+            pointer-events: none;
+        }
+
+        /* 底部導航 - 聖旨卷軸風 */
+        .nav-scroll {
+            background: #FFF8E1;
+            border-top: 4px solid #FFD700;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.5);
+        }
+        .nav-item { color: #5a5a5a; }
+        .nav-item.active { 
+            color: #D32F2F; 
+            font-weight: 900;
+            text-shadow: 0 0 2px #FFD700;
+            transform: translateY(-2px);
+        }
+
+        /* 印章按鈕 */
+        .btn-seal {
+            background-color: #D32F2F;
+            color: #FFF;
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            box-shadow: 0 2px 0 #8B0000;
+            font-weight: bold;
+            transition: all 0.1s;
+        }
+        .btn-seal:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+        /* Loading 特效 */
+        #loading { 
+            position: fixed; inset: 0; 
+            background: #1A237E; 
+            z-index: 999; 
+            display: flex; justify-content: center; align-items: center; flex-direction: column; 
+        }
+        .emblem-circle {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: #D32F2F;
+            border: 4px solid #FFD700;
+            color: #FFF;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 40px; font-weight: 900;
+            box-shadow: 0 0 20px #FFD700;
+            animation: reveal 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="font-serif h-screen flex flex-col text-gray-900">
+
+    <!-- Loading Screen (特級廚師徽章) -->
+    <div id="loading">
+        <div class="emblem-circle mb-6">特</div>
+        <p class="text-legendary-gold font-bold text-lg tracking-widest animate-pulse">傳說中的廚具...連線中</p>
+    </div>
+
+    <!-- Header (Fire Red & Gold) -->
+    <header class="bg-fire-red border-b-4 border-legendary-gold p-3 shadow-lg sticky top-0 z-50">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-fire-red border-2 border-legendary-gold text-white flex justify-center items-center font-bold text-sm shadow-glow">特</div>
+                <h1 class="font-bold text-xl text-white tracking-widest" style="text-shadow: 1px 1px 2px #000;">廚神特攻隊</h1>
+            </div>
+            <div class="text-right">
+                <div class="text-[10px] text-yellow-200">大會剩餘時間</div>
+                <div id="timerDisplay" class="font-mono text-xl font-bold text-legendary-gold drop-shadow-md">00:00:00</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area (Deep Navy Background) -->
+    <main class="flex-1 overflow-y-auto pb-24 px-3 pt-4">
+        
+        <!-- Tab 1: Rules & Schedule -->
+        <div id="tab-rules" class="tab-content active">
+            <!-- Schedule -->
+            <div class="scroll-card p-5 mb-6">
+                <h3 class="font-bold mb-4 text-fire-red border-b-2 border-fire-red pb-2 text-lg"><i class="fas fa-scroll mr-2"></i>活動流程</h3>
+                <div class="relative border-l-2 border-gray-400 ml-2 space-y-6">
+                    <!-- Item -->
+                    <div class="ml-6 relative">
+                        <div class="absolute -left-[31px] bg-fire-red h-4 w-4 rounded-full border-2 border-legendary-gold shadow-glow"></div>
+                        <div class="text-sm font-bold text-fire-red">09:15 – 09:30</div>
+                        <div class="font-bold">報到</div>
+                    </div>
+                    <!-- Item -->
+                    <div class="ml-6 relative">
+                        <div class="absolute -left-[31px] bg-gray-400 h-4 w-4 rounded-full border-2 border-white"></div>
+                        <div class="text-sm font-bold text-gray-600">09:30 – 11:30</div>
+                        <div class="font-bold">角色分工、策略討論</div>
+                    </div>
+                    <!-- Item -->
+                    <div class="ml-6 relative">
+                        <div class="absolute -left-[31px] bg-legendary-gold h-4 w-4 rounded-full border-2 border-white"></div>
+                        <div class="text-sm font-bold text-fire-red">11:30 – 12:20</div>
+                        <div class="font-bold">食材採買 <span class="text-xs font-normal text-fire-red bg-yellow-100 px-1 rounded border border-fire-red">(記得記帳!)</span></div>
+                    </div>
+                    <!-- Item -->
+                    <div class="ml-6 relative">
+                        <div class="absolute -left-[31px] bg-gray-400 h-4 w-4 rounded-full border-2 border-white"></div>
+                        <div class="text-sm font-bold text-gray-600">12:20 – 12:50</div>
+                        <div class="font-bold">中場休息與準備</div>
+                    </div>
+                    <!-- Item -->
+                    <div class="ml-6 relative">
+                        <div class="absolute -left-[31px] bg-fire-red h-4 w-4 rounded-full border-2 border-legendary-gold shadow-glow"></div>
+                        <div class="text-sm font-bold text-fire-red">12:50 – 14:30</div>
+                        <div class="font-bold">廚房分工與協作</div>
+                        <div class="text-xs text-fire-red mt-1 bg-yellow-100 p-2 rounded border border-dashed border-fire-red">
+                            <i class="fas fa-fire-alt mr-1"></i> 需於時限內完成指定 6 道料理！
+                        </div>
+                    </div>
+                    <div class="ml-6 relative">
+                        <div class="absolute -left-[31px] bg-gray-400 h-4 w-4 rounded-full border-2 border-white"></div>
+                        <div class="text-sm font-bold text-gray-600">14:30 – 15:10</div>
+                        <div class="font-bold">成果展示與團隊饗宴</div>
+                    </div>
+                     <div class="ml-6 relative">
+                        <div class="absolute -left-[31px] bg-gray-400 h-4 w-4 rounded-full border-2 border-white"></div>
+                        <div class="text-sm font-bold text-gray-600">15:10 – 16:30</div>
+                        <div class="font-bold">活動總結與學習</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kitchen Final Results -->
+            <div class="scroll-card p-5 mb-6">
+                <h3 class="font-bold mb-3 text-fire-red border-b-2 border-fire-red pb-2 text-lg"><i class="fas fa-concierge-bell mr-2"></i>廚房最終成果</h3>
+                <div class="bg-fire-red text-white text-sm p-2 rounded mb-4 font-bold text-center border border-legendary-gold shadow-sm">
+                    傳說中的六道料理
+                </div>
+                <div id="dishesContainer" class="grid grid-cols-2 gap-3"></div>
+            </div>
+
+            <!-- Winning Keys -->
+            <div class="scroll-card p-5">
+                <h3 class="font-bold mb-4 text-fire-red border-b-2 border-fire-red pb-2 text-lg"><i class="fas fa-dragon mr-2"></i>致勝關鍵</h3>
+                <div class="space-y-4">
+                    <div class="bg-red-50 p-3 rounded border border-fire-red">
+                        <h4 class="font-bold text-fire-red mb-1 text-lg"><i class="fas fa-coins text-legendary-gold mr-1"></i> 成本控制</h4>
+                        <p class="text-sm text-gray-700 mb-2">預算 <strong>1500</strong> 元。每省 <span class="text-fire-red font-bold">$50</span> 加 1 分！</p>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded border border-jade-green">
+                        <h4 class="font-bold text-jade-green mb-1 text-lg"><i class="fas fa-shield-alt mr-1"></i> 品質要求</h4>
+                        <p class="text-sm text-gray-700">真材實料，衛生安全是料理的良心。</p>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded border border-blue-800">
+                        <h4 class="font-bold text-blue-800 mb-1 text-lg"><i class="fas fa-smile mr-1"></i> 顧客滿意</h4>
+                        <p class="text-sm text-gray-700">評審就是最挑剔的食客，用美味征服他們！</p>
+                    </div>
+                    <div class="bg-yellow-50 p-3 rounded border border-yellow-600">
+                        <h4 class="font-bold text-yellow-700 mb-1 text-lg"><i class="fas fa-lightbulb mr-1"></i> 創意思考</h4>
+                        <p class="text-sm text-gray-700">不要被食譜束縛，創造出發光的料理吧！</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Dashboard -->
+        <div id="tab-dashboard" class="tab-content p-2">
+            <!-- Score Card -->
+            <div class="scroll-card p-5 mb-4 !border-fire-red !border-4">
+                <div class="flex justify-between items-start">
+                    <h2 class="text-gray-500 text-sm font-bold uppercase">目前成本得分</h2>
+                    <span class="text-xs bg-fire-red text-white px-2 py-1 rounded border border-legendary-gold">預算 $1500</span>
+                </div>
+                <div class="flex items-end mt-1 justify-center">
+                    <span id="scoreDisplay" class="text-6xl font-black text-fire-red drop-shadow-sm">--</span>
+                    <span class="text-gray-500 text-lg mb-2 ml-2 font-bold">/ 20 分</span>
+                </div>
+                <div class="mt-3 text-center">
+                    <div class="text-sm text-white font-bold bg-jade-green inline-block px-4 py-1 rounded-full border border-legendary-gold shadow-md" id="nextPointHint">
+                        資料同步中...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="scroll-card p-4 text-center">
+                    <div class="text-gray-500 text-xs font-bold">剩餘預算</div>
+                    <div id="remainingBudget" class="text-2xl font-black text-jade-green">--</div>
+                </div>
+                <div class="scroll-card p-4 text-center">
+                    <div class="text-gray-500 text-xs font-bold">已支出</div>
+                    <div id="totalSpent" class="text-2xl font-black text-fire-red">--</div>
+                </div>
+            </div>
+
+            <!-- Add Expense -->
+            <div class="scroll-card p-5">
+                <h3 class="font-bold mb-3 text-fire-red"><i class="fas fa-cart-arrow-down mr-2"></i>採買記帳</h3>
+                <div class="flex gap-2 mb-2">
+                    <input type="text" id="itemName" placeholder="食材名稱" class="border-2 border-gray-300 p-2 rounded w-2/3 focus:outline-none focus:border-fire-red bg-white">
+                    <input type="number" id="itemPrice" placeholder="$" class="border-2 border-gray-300 p-2 rounded w-1/3 focus:outline-none focus:border-fire-red bg-white">
+                </div>
+                <button id="btnAddExpense" class="btn-seal w-full py-3 text-lg">蓋章確認 (加入)</button>
+            </div>
+
+            <!-- List -->
+            <div class="mt-6">
+                <h3 class="font-bold mb-2 text-legendary-gold text-sm text-center">——— 採買明細 ———</h3>
+                <ul id="expenseList" class="space-y-2 pb-4"></ul>
+            </div>
+        </div>
+
+        <!-- Tab 3: Tasks -->
+        <div id="tab-tasks" class="tab-content p-2">
+            
+            <!-- Quality Checklist -->
+            <div class="scroll-card p-4 mb-6 !border-jade-green bg-green-50">
+                <h3 class="font-bold text-jade-green mb-3 text-center border-b border-jade-green pb-2"><i class="fas fa-check-double mr-2"></i>衛生稽查 (永靈刀守護)</h3>
+                <div class="grid grid-cols-2 gap-3" id="checklistContainer"></div>
+            </div>
+
+            <!-- Shopping List -->
+            <div class="scroll-card p-5 mb-6">
+                <h3 class="font-bold mb-3 text-blue-800"><i class="fas fa-clipboard-list mr-2"></i>採購清單</h3>
+                <div class="flex gap-2 mb-3">
+                    <input type="text" id="shopInput" placeholder="待買食材..." class="border-2 border-gray-300 p-2 rounded w-full focus:outline-none focus:border-blue-800 bg-white">
+                    <button id="btnAddShop" class="btn-seal !bg-blue-800 !border-blue-300 px-4"><i class="fas fa-plus"></i></button>
+                </div>
+                <ul id="shopList" class="space-y-2"></ul>
+            </div>
+
+            <!-- Tasks -->
+            <div class="scroll-card p-5">
+                <h3 class="font-bold mb-3 text-fire-red"><i class="fas fa-fire mr-2"></i>團隊分工</h3>
+                <div class="flex gap-2 mb-3">
+                    <input type="text" id="taskInput" placeholder="任務..." class="border-2 border-gray-300 p-2 rounded w-full focus:outline-none focus:border-fire-red bg-white">
+                    <button id="btnAddTask" class="btn-seal px-4"><i class="fas fa-plus"></i></button>
+                </div>
+                <ul id="taskList" class="space-y-2"></ul>
+            </div>
+        </div>
+
+        <!-- Tab 4: Recipes -->
+        <div id="tab-recipes" class="tab-content p-2">
+            
+            <!-- NEW: Cooking Timer -->
+            <div class="scroll-card p-5 mb-6 !border-fire-red bg-red-50 overflow-hidden relative">
+                 <div class="absolute -top-4 -right-4 text-fire-red opacity-10 text-9xl"><i class="fas fa-stopwatch"></i></div>
+                 <h3 class="font-bold text-fire-red mb-3 relative z-10 text-lg border-b border-fire-red pb-2"><i class="fas fa-hourglass-half mr-2"></i>料理計時 (掌握火候)</h3>
+                 
+                 <!-- Timer Controls -->
+                 <div id="cookingTimerControls" class="relative z-10 flex gap-2">
+                     <input type="number" id="cookingTimerInput" placeholder="分" class="border-2 border-fire-red p-2 rounded w-28 text-center text-xl font-bold focus:outline-none text-fire-red bg-white">
+                     <button id="btnStartCooking" class="btn-seal flex-1 shadow-lg">開始料理</button>
+                 </div>
+
+                 <!-- Timer Display -->
+                 <div id="cookingTimerDisplayArea" class="hidden relative z-10 text-center">
+                     <div class="text-6xl font-black text-fire-red tracking-widest bg-white/80 rounded-lg py-2 border-2 border-fire-red shadow-inner mb-2" id="cookingTimerCount">00:00</div>
+                     <div id="cookingTimerMessage" class="text-sm font-bold min-h-[1.5em] mb-2 text-fire-red"></div>
+                     <button id="btnStopCooking" class="w-full bg-white border-2 border-fire-red text-fire-red px-3 py-1 rounded font-bold hover:bg-red-50">
+                        <i class="fas fa-undo mr-1"></i> 重設
+                     </button>
+                 </div>
+            </div>
+
+            <!-- Recipe Notes -->
+            <div class="scroll-card p-5 mb-6">
+                <h3 class="font-bold mb-3 text-gray-700"><i class="fas fa-feather-alt mr-2"></i>秘傳食譜筆記</h3>
+                <p class="text-xs text-gray-500 mb-2">記載你的創意與靈感...</p>
+                <textarea id="recipeNotes" class="w-full border-2 border-gray-300 p-3 rounded h-32 focus:outline-none focus:border-fire-red bg-white text-gray-800 leading-relaxed font-serif" placeholder="在此輸入..."></textarea>
+            </div>
+
+            <!-- Recommended Apps -->
+            <div class="scroll-card p-5 mb-6">
+                <h3 class="font-bold mb-3 text-gray-700"><i class="fas fa-book mr-2"></i>料理界四大名著</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="https://icook.tw/" target="_blank" class="block bg-orange-50 border-2 border-orange-200 p-3 rounded text-center hover:bg-orange-100 transition shadow-sm">
+                        <div class="font-bold text-orange-800">愛料理</div>
+                    </a>
+                    <a href="https://cookpad.com/tw" target="_blank" class="block bg-green-50 border-2 border-green-200 p-3 rounded text-center hover:bg-green-100 transition shadow-sm">
+                        <div class="font-bold text-green-800">Cookpad</div>
+                    </a>
+                    <a href="https://www.ytower.com.tw/" target="_blank" class="block bg-yellow-50 border-2 border-yellow-200 p-3 rounded text-center hover:bg-yellow-100 transition shadow-sm">
+                        <div class="font-bold text-yellow-800">楊桃美食</div>
+                    </a>
+                    <a href="https://www.youtube.com/@masacooking" target="_blank" class="block bg-red-50 border-2 border-red-200 p-3 rounded text-center hover:bg-red-100 transition shadow-sm">
+                        <div class="font-bold text-red-800">MASA</div>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Settings -->
+             <div class="mt-8 pt-4 border-t border-gray-500/30 text-center">
+                 <h4 class="font-bold text-legendary-gold mb-2 text-sm">--- 隊長專用 ---</h4>
+                 <div class="flex justify-center gap-2">
+                    <button id="btnStartTimer" class="bg-gray-700 text-white border border-gray-500 px-3 py-2 text-xs rounded font-bold">重設大會時間</button>
+                    <button id="btnResetAll" class="bg-red-900 text-white border border-red-500 px-3 py-2 text-xs rounded font-bold">⚠️ 銷毀秘籍 (重置)</button>
+                 </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Bottom Nav - Scroll Style -->
+    <nav class="nav-scroll fixed bottom-0 w-full flex justify-around text-xs font-bold z-50 pb-safe">
+        <button onclick="switchTab('rules', this)" class="nav-item active flex-1 py-3 text-center transition"><i class="fas fa-scroll text-lg block mb-1"></i> 規則</button>
+        <button onclick="switchTab('dashboard', this)" class="nav-item flex-1 py-3 text-center transition"><i class="fas fa-coins text-lg block mb-1"></i> 成本</button>
+        <button onclick="switchTab('tasks', this)" class="nav-item flex-1 py-3 text-center transition"><i class="fas fa-tasks text-lg block mb-1"></i> 任務</button>
+        <button onclick="switchTab('recipes', this)" class="nav-item flex-1 py-3 text-center transition"><i class="fas fa-utensils text-lg block mb-1"></i> 食譜</button>
+    </nav>
+
+    <!-- FIREBASE MODULE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, push, onValue, remove, update } 
+               from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // ===========================================
+        // 你的設定 (已填入)
+        // ===========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWQAGsIpygTzV9MvletP_5UIsJwxBUtZg",
+            authDomain: "ora-toolkit.firebaseapp.com",
+            databaseURL: "https://ora-toolkit-default-rtdb.firebaseio.com",
+            projectId: "ora-toolkit",
+            storageBucket: "ora-toolkit.firebasestorage.app",
+            messagingSenderId: "80055571209",
+            appId: "1:80055571209:web:5a46a3f6087e78d14139d8",
+            measurementId: "G-SZW49YQ48C"
+        };
+        // ===========================================
+
+        // 初始化
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const dbRef = ref(db, 'team_competition_v1'); 
+
+        // 參數設定
+        const BUDGET_LIMIT = 1500;
+        const BASE_SCORE = 15;
+        const POINT_PER_SAVING = 50;
+        const MAX_SCORE = 20;
+
+        let localData = {
+            expenses: {},
+            tasks: {},
+            shopping: {},
+            checklist: {
+                hygiene: { text: "洗手/戴口罩/指甲清潔", checked: false },
+                raw_cooked: { text: "生熟食分開", checked: false },
+                trash: { text: "廚餘垃圾清理", checked: false },
+                temp: { text: "食材中心溫度", checked: false }
+            },
+            notes: "",
+            timerEnd: 0,        
+            dishes: {},
+            cookingTimerEnd: 0, 
+            cookingTimerTotal: 0 
+        };
+
+        // --- 監聽雲端資料 ---
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            document.getElementById('loading').style.display = 'none';
+
+            if (data) {
+                // 合併資料
+                if(data.expenses) localData.expenses = data.expenses; else localData.expenses = {};
+                if(data.tasks) localData.tasks = data.tasks; else localData.tasks = {};
+                if(data.shopping) localData.shopping = data.shopping; else localData.shopping = {};
+                if(data.checklist) localData.checklist = data.checklist;
+                if(data.notes) localData.notes = data.notes;
+                if(data.timerEnd) localData.timerEnd = data.timerEnd;
+                if(data.dishes) localData.dishes = data.dishes; else localData.dishes = {};
+                if(data.cookingTimerEnd) localData.cookingTimerEnd = data.cookingTimerEnd; else localData.cookingTimerEnd = 0;
+                if(data.cookingTimerTotal) localData.cookingTimerTotal = data.cookingTimerTotal;
+            } else {
+                update(dbRef, localData);
+            }
+            renderAll();
+        }, (error) => {
+            console.error(error);
+            if(error.code === 'PERMISSION_DENIED') {
+                alert("權限不足！請去 Firebase Console 檢查 Rules。");
+                document.getElementById('loading').innerHTML = '<p class="text-red-500 font-bold">資料庫權限錯誤</p>';
+            }
+        });
+
+        // --- 渲染畫面 ---
+        function renderAll() {
+            renderDashboard();
+            renderTasks();
+            renderShopping();
+            renderChecklist();
+            renderDishes();
+            renderCookingTimer(); 
+            
+            const noteEl = document.getElementById('recipeNotes');
+            if(document.activeElement !== noteEl) {
+                noteEl.value = localData.notes || "";
+            }
+            
+            // 啟動統一的計時器更新迴圈
+            requestAnimationFrame(updateTimersLoop);
+        }
+
+        // 渲染料理計時器
+        function renderCookingTimer() {
+            const now = new Date().getTime();
+            
+            if (localData.cookingTimerEnd > 0) {
+                document.getElementById('cookingTimerControls').classList.add('hidden');
+                document.getElementById('cookingTimerDisplayArea').classList.remove('hidden');
+            } else {
+                document.getElementById('cookingTimerControls').classList.remove('hidden');
+                document.getElementById('cookingTimerDisplayArea').classList.add('hidden');
+                document.getElementById('cookingTimerMessage').textContent = "";
+                document.getElementById('cookingTimerCount').classList.remove('text-red-600', 'animate-pulse-fast');
+                document.getElementById('cookingTimerCount').classList.add('text-fire-red');
+            }
+        }
+
+        // 渲染採購清單
+        function renderShopping() {
+            const shopList = Object.entries(localData.shopping || {}).map(([key, val]) => ({...val, key}));
+            document.getElementById('shopList').innerHTML = shopList.map(item => `
+                <li class="flex items-center justify-between bg-white p-3 rounded border-b border-gray-200">
+                    <div class="flex items-center gap-3 cursor-pointer btn-toggle-shop flex-1" data-key="${item.key}" data-checked="${item.checked}">
+                        <i class="fas ${item.checked ? 'fa-check-square text-blue-800' : 'fa-square text-gray-300'} text-xl"></i>
+                        <span class="${item.checked ? 'line-through text-gray-400' : 'text-blue-900 font-bold'}">${item.text}</span>
+                    </div>
+                    <button data-key="${item.key}" class="btn-del-shop text-gray-400 p-2 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
+                </li>
+            `).join('');
+
+            document.querySelectorAll('.btn-toggle-shop').forEach(el => {
+                el.onclick = () => { update(ref(db, `team_competition_v1/shopping/${el.dataset.key}`), { checked: el.dataset.checked === 'false' }); };
+            });
+            document.querySelectorAll('.btn-del-shop').forEach(el => {
+                el.onclick = () => { remove(ref(db, `team_competition_v1/shopping/${el.dataset.key}`)); };
+            });
+        }
+
+        // 渲染六道菜輸入框
+        function renderDishes() {
+            const container = document.getElementById('dishesContainer');
+            if (!container) return;
+            if (container.children.length === 0) {
+                for (let i = 0; i < 6; i++) {
+                    container.innerHTML += `
+                        <div class="bg-white border-2 border-legendary-gold p-3 rounded text-center shadow-sm relative">
+                            <span class="block text-xs text-fire-red mb-2 font-bold border-b border-gray-100 pb-1">第 ${i + 1} 道</span>
+                            <input type="text" id="dish-chef-${i}" data-index="${i}" data-field="chef" 
+                                class="dish-input w-full text-center text-sm font-bold text-gray-800 bg-gray-50 border-b border-gray-300 rounded-none px-2 py-1 mb-2 focus:border-fire-red focus:outline-none placeholder-gray-400" 
+                                placeholder="大廚名">
+                            <input type="text" id="dish-name-${i}" data-index="${i}" data-field="name"
+                                class="dish-input w-full text-center text-sm text-gray-600 bg-gray-50 border-b border-gray-300 rounded-none px-2 py-1 focus:border-fire-red focus:outline-none placeholder-gray-400" 
+                                placeholder="料理名">
+                        </div>
+                    `;
+                }
+                container.addEventListener('change', (e) => {
+                    if (e.target.classList.contains('dish-input')) {
+                        const index = e.target.dataset.index;
+                        const field = e.target.dataset.field;
+                        const val = e.target.value;
+                        update(ref(db, `team_competition_v1/dishes/${index}`), { [field]: val });
+                    }
+                });
+            }
+            const dishesData = localData.dishes || {};
+            for (let i = 0; i < 6; i++) {
+                const item = dishesData[i] || { chef: '', name: '' };
+                const chefInput = document.getElementById(`dish-chef-${i}`);
+                const nameInput = document.getElementById(`dish-name-${i}`);
+                if (chefInput && document.activeElement !== chefInput) chefInput.value = item.chef || '';
+                if (nameInput && document.activeElement !== nameInput) nameInput.value = item.name || '';
+            }
+        }
+
+        function renderDashboard() {
+            const expensesList = Object.entries(localData.expenses || {}).map(([key, val]) => ({...val, key}));
+            const totalSpent = expensesList.reduce((sum, item) => sum + item.price, 0);
+            const remaining = BUDGET_LIMIT - totalSpent;
+            let bonusPoints = remaining > 0 ? Math.floor(remaining / POINT_PER_SAVING) : 0;
+            let totalScore = Math.min(Math.max(BASE_SCORE + bonusPoints, 0), MAX_SCORE);
+            let nextPointNeeded = POINT_PER_SAVING - (remaining % POINT_PER_SAVING);
+            if(remaining < 0) nextPointNeeded = 0; 
+
+            document.getElementById('remainingBudget').textContent = `$${remaining}`;
+            document.getElementById('totalSpent').textContent = `$${totalSpent}`;
+            document.getElementById('scoreDisplay').textContent = totalScore;
+            
+            const budgetEl = document.getElementById('remainingBudget');
+            if(remaining < 0) {
+                budgetEl.className = "text-2xl font-black text-red-600";
+                budgetEl.classList.add("animate-pulse");
+            } else {
+                budgetEl.className = "text-2xl font-black text-jade-green";
+                budgetEl.classList.remove("animate-pulse");
+            }
+
+            const hintEl = document.getElementById('nextPointHint');
+            if(totalScore === MAX_SCORE) {
+                hintEl.textContent = "🐲 飛龍在天！已達滿分！";
+                hintEl.className = "text-sm text-white font-bold bg-legendary-gold inline-block px-4 py-1 rounded-full border border-white shadow-glow";
+            } else if (remaining < 0) {
+                hintEl.textContent = "💥 黑暗料理界...預算崩壞！";
+                hintEl.className = "text-sm text-white font-bold bg-gray-800 inline-block px-4 py-1 rounded-full border border-red-500";
+            } else {
+                hintEl.textContent = `再省 $${nextPointNeeded} 可 +1 分`;
+                hintEl.className = "text-sm text-white font-bold bg-jade-green inline-block px-4 py-1 rounded-full border border-legendary-gold shadow-md";
+            }
+
+            document.getElementById('expenseList').innerHTML = expensesList.map(item => `
+                <li class="flex justify-between items-center bg-white p-3 rounded border-b border-gray-200 shadow-sm">
+                    <span class="font-bold text-gray-800 text-lg">${item.name}</span>
+                    <div class="flex items-center gap-3">
+                        <span class="font-black text-fire-red text-lg">$${item.price}</span>
+                        <button data-key="${item.key}" class="btn-del-expense text-gray-400 p-2 hover:text-red-600 transition"><i class="fas fa-times-circle text-xl"></i></button>
+                    </div>
+                </li>
+            `).join('');
+
+            document.querySelectorAll('.btn-del-expense').forEach(btn => {
+                btn.onclick = () => { 
+                    remove(ref(db, `team_competition_v1/expenses/${btn.dataset.key}`)); 
+                };
+            });
+        }
+
+        function renderTasks() {
+            const tasksList = Object.entries(localData.tasks || {}).map(([key, val]) => ({...val, key}));
+            document.getElementById('taskList').innerHTML = tasksList.map(t => `
+                <li class="flex items-center justify-between bg-white p-3 rounded border-b border-gray-200">
+                    <div class="flex items-center gap-3 cursor-pointer btn-toggle-task flex-1" data-key="${t.key}" data-done="${t.done}">
+                        <i class="fas ${t.done ? 'fa-check-square text-fire-red' : 'fa-square text-gray-300'} text-xl"></i>
+                        <span class="${t.done ? 'line-through text-gray-400' : 'text-gray-800 font-bold'}">${t.text}</span>
+                    </div>
+                    <button data-key="${t.key}" class="btn-del-task text-gray-400 p-2 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
+                </li>
+            `).join('');
+
+            document.querySelectorAll('.btn-toggle-task').forEach(el => {
+                el.onclick = () => { update(ref(db, `team_competition_v1/tasks/${el.dataset.key}`), { done: el.dataset.done === 'false' }); };
+            });
+            document.querySelectorAll('.btn-del-task').forEach(el => {
+                el.onclick = () => { remove(ref(db, `team_competition_v1/tasks/${el.dataset.key}`)); };
+            });
+        }
+
+        function renderChecklist() {
+            document.getElementById('checklistContainer').innerHTML = Object.keys(localData.checklist).map(key => {
+                const item = localData.checklist[key];
+                return `
+                <div class="flex flex-col items-center justify-center p-3 rounded cursor-pointer btn-toggle-check transition text-center border-2 
+                    ${item.checked ? 'bg-green-100 border-jade-green shadow-inner' : 'bg-white border-green-100 hover:border-green-300'}" 
+                    data-key="${key}" data-checked="${item.checked}">
+                     <i class="fas ${item.checked ? 'fa-check-circle text-jade-green' : 'fa-shield-virus text-green-200'} text-3xl mb-1"></i>
+                     <span class="text-sm ${item.checked ? 'text-jade-green font-bold' : 'text-gray-500 font-bold'}">${item.text}</span>
+                </div>`;
+            }).join('');
+
+            document.querySelectorAll('.btn-toggle-check').forEach(el => {
+                el.onclick = () => { 
+                    update(ref(db, `team_competition_v1/checklist/${el.dataset.key}`), { checked: el.dataset.checked === 'false' }); 
+                };
+            });
+        }
+
+        // --- 按鈕事件綁定 ---
+        
+        const btnAddExpense = document.getElementById('btnAddExpense');
+        if(btnAddExpense) {
+            btnAddExpense.addEventListener('click', () => {
+                const name = document.getElementById('itemName').value;
+                const price = parseInt(document.getElementById('itemPrice').value);
+                if (!name || isNaN(price)) return alert("請輸入正確名稱與金額");
+                push(ref(db, 'team_competition_v1/expenses'), { name, price });
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemPrice').value = '';
+            });
+        }
+
+        const btnAddTask = document.getElementById('btnAddTask');
+        if(btnAddTask) {
+            btnAddTask.addEventListener('click', () => {
+                const task = document.getElementById('taskInput').value;
+                if(!task) return;
+                push(ref(db, 'team_competition_v1/tasks'), { text: task, done: false });
+                document.getElementById('taskInput').value = '';
+            });
+        }
+
+        const btnAddShop = document.getElementById('btnAddShop');
+        if(btnAddShop) {
+            btnAddShop.addEventListener('click', () => {
+                const text = document.getElementById('shopInput').value;
+                if(!text) return;
+                push(ref(db, 'team_competition_v1/shopping'), { text, checked: false });
+                document.getElementById('shopInput').value = '';
+            });
+        }
+
+        const btnStartCooking = document.getElementById('btnStartCooking');
+        if(btnStartCooking) {
+            btnStartCooking.addEventListener('click', () => {
+                const mins = parseInt(document.getElementById('cookingTimerInput').value);
+                if (!mins || mins <= 0) return alert("請輸入有效的分鐘數");
+                const target = new Date().getTime() + mins * 60000;
+                update(ref(db, 'team_competition_v1'), { 
+                    cookingTimerEnd: target,
+                    cookingTimerTotal: mins 
+                });
+            });
+        }
+        
+        const btnStopCooking = document.getElementById('btnStopCooking');
+        if(btnStopCooking) {
+            btnStopCooking.addEventListener('click', () => {
+                update(ref(db, 'team_competition_v1'), { cookingTimerEnd: 0 });
+                document.getElementById('cookingTimerInput').value = '';
+            });
+        }
+
+        let noteTimeout;
+        const noteInput = document.getElementById('recipeNotes');
+        if(noteInput) {
+            noteInput.addEventListener('input', (e) => {
+                clearTimeout(noteTimeout);
+                noteTimeout = setTimeout(() => {
+                    update(ref(db, 'team_competition_v1'), { notes: e.target.value });
+                }, 800);
+            });
+        }
+
+        const btnStartTimer = document.getElementById('btnStartTimer');
+        if(btnStartTimer) {
+            btnStartTimer.addEventListener('click', () => {
+                if(confirm("確定要重新開始 90 分鐘倒數嗎？")) {
+                    const target = new Date().getTime() + 90 * 60000;
+                    update(ref(db, 'team_competition_v1'), { timerEnd: target });
+                }
+            });
+        }
+        
+        const btnResetAll = document.getElementById('btnResetAll');
+        if(btnResetAll) {
+            btnResetAll.addEventListener('click', () => {
+                if(confirm("⚠️ 警告：這會刪除所有隊友手機上的資料！確定嗎？")) {
+                    set(dbRef, {
+                        checklist: {
+                            hygiene: { text: "洗手/戴口罩/指甲清潔", checked: false },
+                            raw_cooked: { text: "生熟食砧板刀具分開", checked: false },
+                            trash: { text: "廚餘垃圾隨手清理", checked: false },
+                            temp: { text: "確認食材中心溫度", checked: false }
+                        },
+                        notes: "",
+                        timerEnd: 0,
+                        dishes: {},
+                        shopping: {},
+                        cookingTimerEnd: 0
+                    });
+                }
+            });
+        }
+
+        // 統一計時器更新迴圈
+        function updateTimersLoop() {
+            const now = new Date().getTime();
+
+            // 1. 更新大會計時器
+            if (localData.timerEnd > 0) {
+                const dist = localData.timerEnd - now;
+                if (dist < 0) {
+                    document.getElementById("timerDisplay").innerHTML = "00:00:00";
+                    document.getElementById("timerDisplay").classList.remove("text-legendary-gold");
+                    document.getElementById("timerDisplay").classList.add("text-red-500", "animate-pulse");
+                } else {
+                    const h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((dist % (1000 * 60)) / 1000);
+                    document.getElementById("timerDisplay").innerHTML = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                    document.getElementById("timerDisplay").classList.add("text-legendary-gold");
+                    document.getElementById("timerDisplay").classList.remove("text-red-500", "animate-pulse");
+                }
+            } else {
+                 document.getElementById("timerDisplay").innerHTML = "00:00:00";
+            }
+
+            // 2. 更新料理計時器
+            if (localData.cookingTimerEnd > 0) {
+                const dist = localData.cookingTimerEnd - now;
+                const displayEl = document.getElementById("cookingTimerCount");
+                const msgEl = document.getElementById("cookingTimerMessage");
+                
+                if (dist < 0) {
+                    displayEl.innerHTML = "00:00";
+                    displayEl.classList.remove("text-fire-red", "text-orange-500");
+                    displayEl.classList.add("text-red-600", "animate-pulse-fast");
+                    msgEl.innerHTML = "<span class='text-red-600 font-black'><i class='fas fa-bell animate-bounce'></i> 時間到！上菜啦！</span>";
+                } else {
+                    const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((dist % (1000 * 60)) / 1000);
+                    displayEl.innerHTML = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                    
+                    if (dist <= 600000) {
+                        displayEl.classList.remove("text-fire-red");
+                        displayEl.classList.add("text-orange-600");
+                        msgEl.innerHTML = "<i class='fas fa-exclamation-triangle'></i> 最後 10 分鐘！";
+                    } else {
+                        displayEl.classList.add("text-fire-red");
+                        displayEl.classList.remove("text-orange-600", "text-red-600", "animate-pulse-fast");
+                        msgEl.innerHTML = "";
+                    }
+                }
+            }
+
+            requestAnimationFrame(updateTimersLoop);
+        }
+
+        window.switchTab = function(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            btn.classList.add('active');
+        }
+    </script>
+</body>
+</html>
